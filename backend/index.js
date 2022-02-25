@@ -6,6 +6,7 @@ const dotenv = require("dotenv")
 
 const { sequelize } = require("./models/index")
 const indexRouter = require("./routes/indexRoutes")
+const authRouter = require("./routes/authRoutes")
 
 dotenv.config()
 
@@ -34,6 +35,7 @@ app.use(
 )
 
 app.use("/", indexRouter)
+app.use("/auth", authRouter)
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`)
