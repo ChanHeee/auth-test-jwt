@@ -1,3 +1,29 @@
+<script>
+  import axios from 'axios';
+  import { onMount } from 'svelte';
+  import { nick, loggedin } from '../store';
+  axios.defaults.baseURL = 'http://localhost:5000';
+  axios.defaults.withCredentials = true;
+
+  onMount(async () => {
+    const { data } = await axios.get('/auth/logincheck');
+    console.log(data);
+    if (data.success) {
+      $nick = data.user.nick;
+    }
+    $loggedin = data.success;
+    console.log($nick, !$loggedin);
+  });
+
+  const logoutHandler = async () => {
+    const { data } = await axios.get('/auth/logout');
+    if (data.success) {
+      $loggedin = false;
+    }
+    console.log($loggedin);
+  };
+</script>
+
 <nav class="navbar px-10 py-2" role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
     <a class="navbar-item" href="/">
@@ -43,10 +69,18 @@
     <div class="navbar-end">
       <div class="navbar-item">
         <div class="buttons">
-          <a class="button is-info">
-            <strong>Sign up</strong>
-          </a>
-          <a class="button is-light" href="/#/login"><strong>Login</strong></a>
+          {#if !$loggedin}
+            <a class="button is-info">
+              <strong>Sign up</strong>
+            </a>
+            <a class="button is-light" href="/#/login"><strong>Login</strong></a
+            >
+          {:else}
+            <p class="mr-4 text-xl">{$nick}</p>
+            <a class="button is-info" on:click={logoutHandler}>
+              <strong>Logout</strong>
+            </a>
+          {/if}
         </div>
       </div>
     </div>

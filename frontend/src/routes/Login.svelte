@@ -1,6 +1,9 @@
 <script>
   import Navbar from './../components/Navbar.svelte';
   import { push } from 'svelte-spa-router';
+  import axios from 'axios';
+  axios.defaults.baseURL = 'http://localhost:5000';
+  axios.defaults.withCredentials = true;
 
   let email = '';
   let password = '';
@@ -16,7 +19,7 @@
     passwordInfo = false;
   };
 
-  const loginHandler = () => {
+  const loginHandler = async () => {
     if (email == '') {
       emailInfo = true;
       emailMessage = 'Please input email.';
@@ -24,11 +27,17 @@
       passwordInfo = true;
       passwordMessage = 'Please input password.';
     } else {
-      push('/');
+      console.log('here', email, password);
+      const { data } = await axios.post('/auth/login', { email, password });
+
+      if (data.success) {
+        push('/');
+      } else {
+        passwordInfo = true;
+        passwordMessage = data;
+      }
     }
   };
-
-  $: console.log(email, password);
 </script>
 
 <div class="h-screen bg-slate-100">
