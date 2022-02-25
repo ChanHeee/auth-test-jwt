@@ -1,36 +1,28 @@
 <script>
   import Navbar from './../components/Navbar.svelte';
-  import { push, pop, replace } from 'svelte-spa-router';
+  import { push } from 'svelte-spa-router';
 
   let email = '';
   let password = '';
   let remember = false;
 
-  let emailDOM;
-  let emailInfoDOM;
-  let passwordDOM;
-  let passwordInfoDOM;
+  let emailInfo = false;
+  let emailMessage = '';
+  let passwordInfo = false;
+  let passwordMessage = '';
 
   const inputFocus = () => {
-    emailDOM.classList.remove('is-danger');
-    emailInfoDOM.classList.add('hidden');
-    passwordDOM.classList.remove('is-danger');
-    passwordInfoDOM.classList.add('hidden');
+    emailInfo = false;
+    passwordInfo = false;
   };
 
   const loginHandler = () => {
-    emailDOM = document.getElementById('email');
-    emailInfoDOM = document.getElementById('emailInfo');
-    passwordDOM = document.getElementById('password');
-    passwordInfoDOM = document.getElementById('passwordInfo');
     if (email == '') {
-      emailDOM.classList.add('is-danger');
-      emailInfoDOM.classList.remove('hidden');
-      emailInfoDOM.innerText = 'Please input email.';
+      emailInfo = true;
+      emailMessage = 'Please input email.';
     } else if (password == '') {
-      passwordDOM.classList.add('is-danger');
-      passwordInfoDOM.classList.remove('hidden');
-      passwordInfoDOM.innerText = 'Please input password.';
+      passwordInfo = true;
+      passwordMessage = 'Please input password.';
     } else {
       push('/');
     }
@@ -52,16 +44,15 @@
         <label class="label">Email</label>
         <div class="control">
           <input
-            id="email"
-            class="input py-5 text-xl"
+            class="input py-5 text-xl {emailInfo && 'is-danger'}"
             bind:value={email}
             on:focus={inputFocus}
             type="email"
             placeholder="hello@example.com"
           />
         </div>
-        <p id="emailInfo" class="ml-2 mt-2 help text-lg hidden is-danger">
-          This username is available
+        <p class="ml-2 mt-2 help text-lg is-danger {emailInfo || 'hidden'}">
+          {emailMessage}
         </p>
       </div>
 
@@ -69,16 +60,15 @@
         <label class="label">Password</label>
         <div class="control">
           <input
-            id="password"
-            class="input py-5 text-xl"
+            class="input py-5 text-xl {passwordInfo && 'is-danger'}"
             bind:value={password}
             on:focus={inputFocus}
             type="password"
             placeholder="********"
           />
         </div>
-        <p id="passwordInfo" class="ml-2 mt-2 help text-lg hidden is-danger">
-          This username is available
+        <p class="ml-2 mt-2 help text-lg is-danger {passwordInfo || 'hidden'}">
+          {passwordMessage}
         </p>
       </div>
 
