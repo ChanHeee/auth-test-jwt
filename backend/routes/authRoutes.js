@@ -1,5 +1,6 @@
 const express = require("express")
 const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken")
 const { isNotLoggedIn } = require("../middlewares/authMiddlewares")
 const { User } = require("../models")
 const { generateToken } = require("../utils/generateToken")
@@ -55,10 +56,12 @@ router.post("/login", isNotLoggedIn, async (req, res) => {
     if (user) {
       const passwordCheck = bcrypt.compareSync(inputPw, user.password)
       if (passwordCheck) {
+        req.user = user
         const token = generateToken(user.id, user.email, user.nick)
         res.cookie("token", token, {
           maxAge: 1000 * 60 * 60,
         })
+        console.log(token)
         res.json({ success: true, user })
       } else {
         return res.send("비밀번호를 잘못 입력했습니다.")
@@ -70,4 +73,27 @@ router.post("/login", isNotLoggedIn, async (req, res) => {
     console.error(error)
     next(error)
   }
+})
+
+//* desc    Check if user login
+//* route   /auth/logincheck
+//* access  Public
+router.get("/logincheck", (req, res) => {
+  if (req.cookies.token) {
+    const user = jwt.verify(req.cookies.token, process.env.JWT_SECRET)
+    req.user = user
+    delete user["iat"]
+    delete user["exp"]
+    return res.json(user)
+  } else {
+    res.json({ login: false })
+  }
+})
+
+//* desc    Logout User
+//* route   /auth/logout
+//* access  Logged in
+router.get("/logout", (req, res) => {
+  res.clearCookie("token")
+  res.json({ success: true })
 })

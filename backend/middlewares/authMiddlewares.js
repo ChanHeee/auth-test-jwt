@@ -1,5 +1,5 @@
 exports.isLoggedIn = (req, res, next) => {
-  if (req.token) {
+  if (req.user) {
     next()
   } else {
     res.status(403).json({
@@ -11,7 +11,7 @@ exports.isLoggedIn = (req, res, next) => {
 }
 
 exports.isNotLoggedIn = (req, res, next) => {
-  if (!req.token) {
+  if (!req.user) {
     next()
   } else {
     res.status(403).json({
