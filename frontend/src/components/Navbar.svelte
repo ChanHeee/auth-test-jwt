@@ -1,12 +1,16 @@
 <script>
   import axios from 'axios';
   import { onMount } from 'svelte';
+  import { getCookie } from 'svelte-cookie';
   import { nick, loggedin } from '../store';
   axios.defaults.baseURL = 'http://localhost:5000';
   axios.defaults.withCredentials = true;
 
   onMount(async () => {
-    const { data } = await axios.get('/auth/logincheck');
+    const token = getCookie('token');
+    const { data } = await axios.get('/auth/logincheck', {
+      headers: { authorization: token },
+    });
     console.log(data);
     if (data.success) {
       $nick = data.user.nick;
@@ -68,7 +72,7 @@
 
     <div class="navbar-end">
       <div class="navbar-item">
-        <div class="buttons">
+        <div class="buttons flex items-center">
           {#if !$loggedin}
             <a class="button is-info">
               <strong>Sign up</strong>
@@ -76,8 +80,10 @@
             <a class="button is-light" href="/#/login"><strong>Login</strong></a
             >
           {:else}
-            <p class="mr-4 text-xl">{$nick}</p>
-            <a class="button is-info" on:click={logoutHandler}>
+            <p class="mr-4 text-lg">
+              <strong>{$nick}</strong>
+            </p>
+            <a class="button is-info mb-0" on:click={logoutHandler}>
               <strong>Logout</strong>
             </a>
           {/if}

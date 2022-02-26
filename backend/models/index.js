@@ -1,5 +1,5 @@
 const Sequelize = require("sequelize")
-const config = require("../config/config")[process.env.NODE_ENVIRONMENT]
+const config = require("../config/config")[process.env.NODE_ENV]
 const User = require("./user")
 
 const db = {}

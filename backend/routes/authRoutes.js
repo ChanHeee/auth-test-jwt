@@ -64,10 +64,10 @@ router.post("/login", isNotLoggedIn, async (req, res) => {
         console.log(token)
         res.json({ success: true, user })
       } else {
-        return res.send("비밀번호를 잘못 입력했습니다.")
+        return res.send("Password does not match.")
       }
     } else {
-      return res.send("가입되지 않은 아이디입니다.")
+      return res.send("Email does not exist.")
     }
   } catch (error) {
     console.error(error)
@@ -79,14 +79,14 @@ router.post("/login", isNotLoggedIn, async (req, res) => {
 //* route   /auth/logincheck
 //* access  Public
 router.get("/logincheck", (req, res) => {
-  if (req.cookies.token) {
-    const user = jwt.verify(req.cookies.token, process.env.JWT_SECRET)
+  try {
+    const user = jwt.verify(req.headers.authorization, process.env.JWT_SECRET)
     req.user = user
     delete user["iat"]
     delete user["exp"]
-    return res.json(user)
-  } else {
-    res.json({ login: false })
+    return res.json({ success: true, user })
+  } catch {
+    res.json({ success: false })
   }
 })
 
