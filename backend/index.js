@@ -42,7 +42,6 @@ app.use(
   })
 )
 
-app.use("/", indexRouter)
 app.use("/auth", authRouter)
 
 if (process.env.NODE_ENV == "production") {

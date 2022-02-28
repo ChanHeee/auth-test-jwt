@@ -74,7 +74,7 @@
       <div class="navbar-item">
         <div class="buttons flex items-center">
           {#if !$loggedin}
-            <a class="button is-info">
+            <a class="button is-info" href="/#/signup">
               <strong>Sign up</strong>
             </a>
             <a class="button is-light" href="/#/login"><strong>Login</strong></a

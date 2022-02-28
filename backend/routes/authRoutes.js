@@ -14,19 +14,11 @@ router.post("/join", isNotLoggedIn, async (req, res) => {
     const { email, nick, password } = req.body
     const exUser = await User.findOne({ where: { email } })
     if (exUser) {
-      return res.json({
-        error: {
-          message: "이미 가입된 사용자입니다.",
-        },
-      })
+      return res.send("This email is already registered.")
     } else {
       const exNick = await User.findOne({ where: { nick } })
       if (exNick) {
-        return res.json({
-          error: {
-            message: "이미 사용 중인 닉네임입니다.",
-          },
-        })
+        return res.send("this nickname is already using")
       } else {
         const newUser = await User.create({
           email,
@@ -82,6 +74,7 @@ router.get("/logincheck", (req, res) => {
   try {
     const user = jwt.verify(req.headers.authorization, process.env.JWT_SECRET)
     req.user = user
+    console.log("\n\n\n", req.user, "\n\n\n")
     delete user["iat"]
     delete user["exp"]
     return res.json({ success: true, user })

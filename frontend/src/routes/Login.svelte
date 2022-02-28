@@ -1,9 +1,17 @@
 <script>
   import Navbar from './../components/Navbar.svelte';
-  import { push } from 'svelte-spa-router';
+  import { pop, push } from 'svelte-spa-router';
   import axios from 'axios';
+  import { onMount } from 'svelte';
+  import { loggedin } from '../store';
   axios.defaults.baseURL = 'http://localhost:5000';
   axios.defaults.withCredentials = true;
+
+  onMount(() => {
+    if ($loggedin) {
+      pop();
+    }
+  });
 
   let email = '';
   let password = '';
@@ -22,10 +30,10 @@
   const loginHandler = async () => {
     if (email == '') {
       emailInfo = true;
-      emailMessage = 'Please input email.';
+      emailMessage = 'Please enter email.';
     } else if (password == '') {
       passwordInfo = true;
-      passwordMessage = 'Please input password.';
+      passwordMessage = 'Please enter password.';
     } else {
       console.log('here', email, password);
       const { data } = await axios.post('/auth/login', { email, password });
@@ -47,7 +55,7 @@
     <hr class="flex h-2 bg-blue" />
     <p class="subtitle">Please login to proceed.</p>
     <div
-      class="flex flex-col max-w-lg min-w-[40%] mx-auto p-10 bg-white rounded-xl "
+      class="flex flex-col max-w-lg min-w-[40%] mx-auto px-10 py-8 bg-white rounded-xl "
     >
       <div class="field">
         <label class="label">Email</label>
