@@ -1,9 +1,12 @@
 const express = require("express")
 const bcrypt = require("bcrypt")
-const jwt = require("jsonwebtoken")
-const { isNotLoggedIn } = require("../middlewares/authMiddlewares")
+const { isNotLoggedIn, verifyToken } = require("../middlewares/authMiddlewares")
 const { User } = require("../models")
-const { generateToken } = require("../utils/generateToken")
+const {
+  getAccessToken,
+  getRefreshToken,
+  isTokenValid,
+} = require("../utils/jwt-utils")
 const router = express.Router()
 
 //* desc    Create User
@@ -49,11 +52,10 @@ router.post("/login", isNotLoggedIn, async (req, res) => {
       const passwordCheck = bcrypt.compareSync(inputPw, user.password)
       if (passwordCheck) {
         req.user = user
-        const token = generateToken(user.id, user.email, user.nick)
-        res.cookie("token", token, {
-          maxAge: 1000 * 60 * 60,
-        })
-        console.log(token)
+        const accessToken = getAccessToken(user)
+        const refreshToken = getRefreshToken()
+        res.cookie("accessToken", accessToken)
+        res.cookie("refreshToken", refreshToken)
         res.json({ success: true, user })
       } else {
         return res.send("Password does not match.")
@@ -70,23 +72,38 @@ router.post("/login", isNotLoggedIn, async (req, res) => {
 //* desc    Check if user login
 //* route   /auth/logincheck
 //* access  Public
-router.get("/logincheck", (req, res) => {
-  try {
-    const user = jwt.verify(req.headers.authorization, process.env.JWT_SECRET)
-    req.user = user
-    console.log("\n\n\n", req.user, "\n\n\n")
-    delete user["iat"]
-    delete user["exp"]
-    return res.json({ success: true, user })
-  } catch {
-    res.json({ success: false })
-  }
+router.get("/logincheck", verifyToken, (req, res) => {
+  const user = req.user
+  console.log("/logincheck", req.user)
+  delete user["iat"]
+  delete user["exp"]
+  return res.json({ success: true, user })
 })
 
 //* desc    Logout User
 //* route   /auth/logout
 //* access  Logged in
 router.get("/logout", (req, res) => {
-  res.clearCookie("token")
+  res.clearCookie("accessToken")
   res.json({ success: true })
+})
+
+//* desc    Update accessToken
+//* route   /auth/refresh
+//* access  Public
+router.get("/refresh", (req, res) => {
+  const accessToken = isTokenValid(req.headers.authorization)
+  console.log(accessToken, "dads")
+  if (accessToken) {
+    const newAccessToken = getAccessToken({
+      id: 1,
+      nick: "test",
+      email: "test@gmail.com",
+    })
+    res.cookie("accessToken", newAccessToken)
+    res.json({ success: true })
+  } else {
+    console.log("accessToken FALSE")
+    res.json({ success: true, isValid: false })
+  }
 })

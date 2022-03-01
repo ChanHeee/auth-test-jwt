@@ -7,16 +7,20 @@
   axios.defaults.withCredentials = true;
 
   onMount(async () => {
-    const token = getCookie('token');
+    const accessToken = getCookie('accessToken');
     const { data } = await axios.get('/auth/logincheck', {
-      headers: { authorization: token },
+      headers: { authorization: accessToken },
     });
     console.log(data);
     if (data.success) {
       $nick = data.user.nick;
+    } else {
+      const { data } = await axios.get('/auth/refresh', {
+        headers: { authorization: accessToken },
+      });
+      console.log('Refresh', data.success);
     }
     $loggedin = data.success;
-    console.log($nick, !$loggedin);
   });
 
   const logoutHandler = async () => {
