@@ -14,13 +14,19 @@
     console.log(data);
     if (data.success) {
       $nick = data.user.nick;
+      $loggedin = data.success;
     } else {
       const { data } = await axios.get('/auth/refresh', {
-        headers: { authorization: accessToken },
+        headers: {
+          authorization: accessToken,
+          refreshToken: getCookie('refreshToken'),
+        },
       });
-      console.log('Refresh', data.success);
+      if (data.success) {
+        $nick = data.user.nick;
+      }
+      $loggedin = data.success;
     }
-    $loggedin = data.success;
   });
 
   const logoutHandler = async () => {

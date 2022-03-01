@@ -1,5 +1,6 @@
 const express = require("express")
 const bcrypt = require("bcrypt")
+const { createClient } = require("redis")
 const { isNotLoggedIn, verifyToken } = require("../middlewares/authMiddlewares")
 const { User } = require("../models")
 const {
@@ -7,6 +8,12 @@ const {
   getRefreshToken,
   isTokenValid,
 } = require("../utils/jwt-utils")
+
+const client = createClient()
+client.on("ready", () => {
+  console.log("Redis server connected")
+})
+client.connect()
 const router = express.Router()
 
 //* desc    Create User
@@ -56,6 +63,7 @@ router.post("/login", isNotLoggedIn, async (req, res) => {
         const refreshToken = getRefreshToken()
         res.cookie("accessToken", accessToken)
         res.cookie("refreshToken", refreshToken)
+        client.set(refreshToken, user.id.toString())
         res.json({ success: true, user })
       } else {
         return res.send("Password does not match.")
@@ -84,26 +92,42 @@ router.get("/logincheck", verifyToken, (req, res) => {
 //* route   /auth/logout
 //* access  Logged in
 router.get("/logout", (req, res) => {
+  client.del(req.cookies.refreshToken)
   res.clearCookie("accessToken")
+  res.clearCookie("refreshToken")
   res.json({ success: true })
 })
 
 //* desc    Update accessToken
 //* route   /auth/refresh
 //* access  Public
-router.get("/refresh", (req, res) => {
-  const accessToken = isTokenValid(req.headers.authorization)
-  console.log(accessToken, "dads")
-  if (accessToken) {
-    const newAccessToken = getAccessToken({
-      id: 1,
-      nick: "test",
-      email: "test@gmail.com",
-    })
-    res.cookie("accessToken", newAccessToken)
-    res.json({ success: true })
+router.get("/refresh", async (req, res) => {
+  const accessToken = req.headers.authorization
+  const refreshToken = req.cookies.refreshToken
+
+  if (isTokenValid(accessToken)) {
+    const userID = await client.get(refreshToken)
+
+    if (userID != null && isTokenValid(refreshToken)) {
+      const user = await User.findOne({ where: { id: userID } })
+      const newAccessToken = getAccessToken(user)
+      const newRefreshToken = getRefreshToken()
+      res.cookie("accessToken", newAccessToken)
+      res.cookie("refreshToken", newRefreshToken)
+      client.del(refreshToken)
+      client.set(newRefreshToken, userID.toString())
+      console.log("refresh tokens")
+      res.json({ success: true, user })
+    } else {
+      console.log("refreshToken is INVALID or NOT EXISTS")
+      res.json({
+        success: false,
+        message: "REFRSHTOKEN NOT EXISTS OR INVALID",
+        refreshToken,
+      })
+    }
   } else {
-    console.log("accessToken FALSE")
-    res.json({ success: true, isValid: false })
+    console.log("accessToken is INVALID")
+    res.json({ success: false, message: "ACCESSTOKEN INVALID" })
   }
 })
